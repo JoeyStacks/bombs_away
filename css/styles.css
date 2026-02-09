@@ -207,9 +207,35 @@ input[type=number] {
     border-radius: 14px;
     padding: 18px 22px;
     width: min(420px, 90vw);
+    max-height: min(80vh, 720px);
+    overflow-y: auto;
     z-index: 10;
     box-shadow: 0 16px 40px rgba(0,0,0,0.45);
     animation: modalIn 0.25s ease both;
+}
+
+.modal {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,191,77,0.6) rgba(12,14,18,0.6);
+}
+
+.modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: rgba(12,14,18,0.6);
+    border-radius: 12px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255,191,77,0.75), rgba(255,106,61,0.7));
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.4);
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(255,207,110,0.9), rgba(255,120,70,0.85));
 }
 
 .modal h2 {
