@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bombs Away by Haze</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="title-screen">
+        <h1 class="game-title">Bombs Away</h1>
+        <p class="subtitle">by <span class="haze haze-shadow">Haze</span></p>
+        <p class="tagline">A roguelite minesweeper in the making.</p>
+
+        <div class="mode-stack">
+            <button id="classic-btn" class="mode-btn">Classic</button>
+            <button id="custom-btn" class="mode-btn">Custom</button>
+            <button id="adventure-btn" class="mode-btn">Adventure</button>
+            <button id="items-btn" class="mode-btn secondary">Items</button>
+            <button id="stats-btn" class="mode-btn secondary">Stats</button>
+        </div>
+    </div>
+
+    <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+    <div id="config-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button id="close-modal-btn" class="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h2 id="modal-title">Custom</h2>
+        <div class="settings">
+            <label for="width-input">Width: <span id="width-label">9</span></label>
+            <input type="range" id="width-input" min="5" max="25" value="9">
+
+            <label for="height-input">Height: <span id="height-label">9</span></label>
+            <input type="range" id="height-input" min="5" max="25" value="9">
+
+            <label>Bombs: <span id="bomb-label">15</span> / <span id="tiles-label">81</span> tiles</label>
+            <input type="range" id="bomb-slider" min="1" max="99" value="15">
+
+            <label>Lives: <span id="lives-label">3</span></label>
+            <input type="range" id="lives-slider" min="1" max="5" value="3">
+
+            <details class="ability-section" open>
+                <summary>Abilities</summary>
+                <div class="ability-settings">
+                    <label>Scan: <span id="scan-label">3</span></label>
+                    <input type="range" id="scan-slider" min="1" max="5" value="3">
+
+                    <label>Reveal: <span id="reveal-label">3</span></label>
+                    <input type="range" id="reveal-slider" min="1" max="5" value="3">
+
+                    <label>Flag Pulse: <span id="flag-label">3</span></label>
+                    <input type="range" id="flag-slider" min="1" max="5" value="3">
+
+                    <label>Shield: <span id="shield-label">3</span></label>
+                    <input type="range" id="shield-slider" min="1" max="5" value="3">
+
+                    <label>Echo: <span id="echo-label">3</span></label>
+                    <input type="range" id="echo-slider" min="1" max="5" value="3">
+                </div>
+            </details>
+        </div>
+        <div class="modal-actions">
+            <button id="start-btn">Start Game</button>
+        </div>
+    </div>
+
+    <div id="stats-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+        <button id="close-stats-btn" class="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h2 id="stats-title">Top Configurations</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Grid</th>
+                    <th>Bombs</th>
+                    <th>Best Time</th>
+                    <th>Wins / Attempts</th>
+                </tr>
+            </thead>
+            <tbody id="stats-body">
+                <tr>
+                    <td colspan="4">No games yet.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="items-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="items-title">
+        <button id="close-items-btn" class="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h2 id="items-title">Items</h2>
+        <p class="modal-subtitle">Everything the shop can offer right now.</p>
+        <div class="item-filters">
+            <button type="button" id="items-filter-all" class="filter-btn active">All Items</button>
+            <button type="button" id="items-filter-shop" class="filter-btn">Shop Only</button>
+        </div>
+        <div id="items-list" class="item-list"></div>
+    </div>
+
+    <div id="adventure-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="adventure-title">
+        <button id="close-adventure-btn" class="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h2 id="adventure-title">Adventure</h2>
+        <p class="modal-subtitle">Choose your class to start the run.</p>
+        <div class="class-grid" role="listbox" aria-label="Classes">
+            <button class="class-card selected" data-class="investigator" role="option" aria-selected="true">
+                <div class="class-art" aria-hidden="true">
+                    <svg viewBox="0 0 120 120" class="class-icon">
+                        <circle cx="50" cy="50" r="28" fill="none" stroke="currentColor" stroke-width="6"/>
+                        <path d="M70 70l26 26" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                        <rect x="40" y="22" width="20" height="10" rx="4" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h3>Investigator</h3>
+                <p>Starts with 3 scans.</p>
+            </button>
+            <button class="class-card" data-class="knight" role="option" aria-selected="false">
+                <div class="class-art" aria-hidden="true">
+                    <svg viewBox="0 0 120 120" class="class-icon">
+                        <path d="M60 14l34 16v28c0 24-16 41-34 48-18-7-34-24-34-48V30l34-16z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/>
+                        <path d="M60 30v52" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+                        <path d="M44 52h32" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h3>Knight</h3>
+                <p>Starts with 3 shields.</p>
+            </button>
+        </div>
+        <div class="modal-actions">
+            <button id="adventure-start-btn">Start Run</button>
+        </div>
+    </div>
+
+    <div id="adventure-restart-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="restart-title">
+        <button id="close-restart-btn" class="modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+        <h2 id="restart-title">Start Over?</h2>
+        <p class="modal-subtitle">This will reset your adventure run back to wave 1.</p>
+        <div class="modal-actions">
+            <button id="restart-confirm-btn">Yes</button>
+            <button id="restart-cancel-btn" class="secondary">No</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden">
+        <div id="hud">
+            <div class="hud-row">
+                <div class="hud-group">
+                    <span id="timer">00:00</span>
+                    <span id="flags">Flags: 0/0</span>
+                    <span id="wave-count">Wave: --</span>
+                    <span id="scrap-count">Scrap: 0</span>
+                    <span id="stats">Best: --:-- | Wins: 0 | Streak: 0</span>
+                </div>
+                <div class="hud-group">
+                    <button id="restart-btn">Restart</button>
+                    <button id="menu-btn" class="menu-btn">Menu</button>
+                </div>
+            </div>
+            <div class="hud-row hud-utility">
+                <div id="lives" class="hud-lives" aria-label="Lives"></div>
+                <div id="run-mods" class="hud-mods" aria-label="Run modifiers"></div>
+                <div id="abilities" class="hud-abilities" aria-label="Abilities">
+                    <button id="scan-btn" class="ability-btn" type="button" aria-label="Scan">
+                        <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span class="ability-name">Scan</span>
+                        <span id="scan-count" class="ability-count">0</span>
+                    </button>
+                    <button id="reveal-btn" class="ability-btn" type="button" aria-label="Reveal">
+                        <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <span class="ability-name">Reveal</span>
+                        <span id="reveal-count" class="ability-count">0</span>
+                    </button>
+                    <button id="flag-btn" class="ability-btn" type="button" aria-label="Flag Pulse">
+                        <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M5 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M6 5h10l-2.5 3 2.5 3H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="ability-name">Flag</span>
+                        <span id="flag-count" class="ability-count">0</span>
+                    </button>
+                    <button id="shield-btn" class="ability-btn" type="button" aria-label="Shield">
+                        <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="ability-name">Shield</span>
+                        <span id="shield-count" class="ability-count">0</span>
+                    </button>
+                    <button id="echo-btn" class="ability-btn" type="button" aria-label="Echo">
+                        <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 5v4M12 15v4M5 12h4M15 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span class="ability-name">Echo</span>
+                        <span id="echo-count" class="ability-count">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="board-wrap">
+            <div id="board"></div>
+            <div id="status" class="status overlay hidden">
+                <div id="status-message"></div>
+                <button id="wave-continue-btn" class="status-action hidden">Continue</button>
+            </div>
+        </div>
+        <div id="wave-transition" class="wave-transition hidden"></div>
+        <div id="shop-screen" class="shop-screen hidden">
+            <div class="shop-card">
+                <div class="shop-keep">
+                    <div class="shop-keeper-art" aria-hidden="true">
+                        <svg viewBox="0 0 160 140" class="shop-keeper-icon">
+                            <path d="M20 92c10-26 34-44 60-44s50 18 60 44" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+                            <circle cx="80" cy="62" r="22" fill="none" stroke="currentColor" stroke-width="6"/>
+                            <path d="M58 62c6 4 14 4 22 0" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                            <path d="M46 32l34-16 34 16" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M118 92l14-22 10 8-14 22" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="shop-keeper-meta">
+                        <div class="shop-keeper-text">
+                            <h3>Shopkeeper</h3>
+                            <p>Tools for the journey ahead.</p>
+                        </div>
+                        <div class="shop-keeper-tools">
+                            <div id="shop-scrap" class="shop-scrap">
+                                <span class="scrap-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M6 4l12 4-4 12-12-4 4-12z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                        <path d="M11 8l5 2-2 5-5-2 2-5z" fill="currentColor" opacity="0.2"/>
+                                    </svg>
+                                </span>
+                                <span class="shop-scrap-label">Scrap</span>
+                                <span class="shop-scrap-value">0</span>
+                            </div>
+                            <button id="shop-reroll-btn" class="shop-reroll" data-cost="2">
+                                <span class="dice-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <rect x="5" y="5" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                                        <circle cx="9" cy="9" r="1.2" fill="currentColor"/>
+                                        <circle cx="15" cy="15" r="1.2" fill="currentColor"/>
+                                        <circle cx="15" cy="9" r="1.2" fill="currentColor"/>
+                                        <circle cx="9" cy="15" r="1.2" fill="currentColor"/>
+                                    </svg>
+                                </span>
+                                Reroll
+                                <span id="shop-reroll-count" class="reroll-count">0</span>
+                                <span class="shop-price" aria-label="Cost 2 scrap">
+                                    <span class="scrap-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M6 4l12 4-4 12-12-4 4-12z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                            <path d="M11 8l5 2-2 5-5-2 2-5z" fill="currentColor" opacity="0.2"/>
+                                        </svg>
+                                    </span>
+                                    <span class="price-value">2</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="shop-wares" data-shop-wares></div>
+                <div class="shop-mods">
+                    <div class="shop-mods-title">Run Mods</div>
+                    <div id="shop-mods-list" class="shop-mods-list"></div>
+                </div>
+                <div class="shop-actions">
+                    <button id="shop-continue-btn">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="explosion-sound" src="assets/explosion.mp3"></audio>
+    <audio id="pop-sound" src="audio/pop.wav"></audio>
+    <script src="js/tile.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/hud.js"></script>
+    <script src="js/abilities.js"></script>
+    <script src="js/dom.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
