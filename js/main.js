@@ -8,6 +8,7 @@ const {
     flagsEl,
     statsEl,
     hudEl,
+    hudToggle,
     statusEl,
     statusMessageEl,
     waveContinueBtn,
@@ -59,6 +60,7 @@ const {
     echoLabel,
     scanBtn,
     scanCountEl,
+    flagModeBtn,
     revealBtn,
     revealCountEl,
     flagBtn,
@@ -104,6 +106,9 @@ class Game {
         this.itemsCatalog = this.buildItemsCatalog();
         this.shopItemPool = this.itemsCatalog.filter((item) => item.shop);
         this.itemsFilterMode = 'all';
+        window.addEventListener('resize', () => {
+            if (this.board) this.board.resize();
+        });
 
         this.configModal = new window.BombsAway.ConfigModal({
             widthInput,
@@ -177,6 +182,12 @@ class Game {
         waveContinueBtn.onclick = () => this.advanceAdventureWave();
         shopContinueBtn.onclick = () => this.closeShopAndStartNextWave();
         shopRerollBtn.onclick = () => this.buyShopReroll();
+        if (hudToggle) {
+            hudToggle.onclick = () => this.toggleHud();
+        }
+        if (flagModeBtn) {
+            flagModeBtn.onclick = () => this.toggleFlagMode();
+        }
         if (itemsFilterAll && itemsFilterShop) {
             itemsFilterAll.onclick = () => this.setItemsFilter('all');
             itemsFilterShop.onclick = () => this.setItemsFilter('shop');
@@ -278,6 +289,10 @@ class Game {
 
         this.livesDisplay.setLives(config.lives, config.livesLeft ?? config.lives);
         this.livesDisplay.setShieldActive(config.shieldActive ?? 0);
+        if (flagModeBtn) {
+            flagModeBtn.classList.remove('active');
+            flagModeBtn.setAttribute('aria-pressed', 'false');
+        }
 
         this.board = new Board({
             width: config.width,
@@ -299,6 +314,7 @@ class Game {
             shields: config.shields,
             echoes: config.echoes
         }, { shieldActive: config.shieldActive ?? 0, scanUpgrade: config.upgrades?.scan ?? 0 });
+        if (flagModeBtn) this.board.setFlagMode(flagModeBtn.classList.contains('active'));
     }
 
     startClassic() {
@@ -501,6 +517,22 @@ class Game {
                 shopRerollCount.textContent = '0';
             }
         }
+    }
+
+    toggleHud() {
+        if (!hudEl || !hudToggle) return;
+        hudEl.classList.toggle('hud-collapsed');
+        const expanded = !hudEl.classList.contains('hud-collapsed');
+        hudToggle.setAttribute('aria-expanded', String(expanded));
+        hudToggle.textContent = expanded ? 'HUD' : 'HUD +';
+    }
+
+    toggleFlagMode() {
+        if (!flagModeBtn) return;
+        const active = !flagModeBtn.classList.contains('active');
+        flagModeBtn.classList.toggle('active', active);
+        flagModeBtn.setAttribute('aria-pressed', String(active));
+        if (this.board) this.board.setFlagMode(active);
     }
 
     updateRunModsDisplay() {

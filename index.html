@@ -160,8 +160,9 @@
 
     <div id="game-screen" class="hidden">
         <div id="hud">
-            <div class="hud-row">
+            <div class="hud-row hud-primary">
                 <div class="hud-group">
+                    <button id="hud-toggle" class="hud-toggle" type="button" aria-expanded="true">HUD</button>
                     <span id="timer">00:00</span>
                     <span id="flags">Flags: 0/0</span>
                     <span id="wave-count">Wave: --</span>
@@ -177,6 +178,13 @@
                 <div id="lives" class="hud-lives" aria-label="Lives"></div>
                 <div id="run-mods" class="hud-mods" aria-label="Run modifiers"></div>
                 <div id="abilities" class="hud-abilities" aria-label="Abilities">
+                    <button id="flag-mode-btn" class="ability-btn flag-mode-btn" type="button" aria-label="Flag mode" aria-pressed="false">
+                        <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M5 4v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M6 5h10l-2.5 3 2.5 3H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="ability-name">Flag Mode</span>
+                    </button>
                     <button id="scan-btn" class="ability-btn" type="button" aria-label="Scan">
                         <svg class="ability-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                             <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>

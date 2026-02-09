@@ -19,18 +19,40 @@ class Board {
         this.firstReveal = true;
         this.locked = false;
         this.lastBombHit = null;
+        this.cellGap = 4;
+        this.flagMode = false;
+        this.longPressDuration = 450;
+        this.hapticEnabled = 'vibrate' in navigator;
+        this.touchPress = null;
 
         this.buildBoard();
         this.placeBombs();
         this.computeNeighbors();
     }
 
+    setCellSize() {
+        if (!this.boardEl) return;
+        const availableWidth = window.innerWidth * 0.92;
+        const availableHeight = window.innerHeight * 0.6;
+        const widthSize = (availableWidth - this.cellGap * (this.cols - 1)) / this.cols;
+        const heightSize = (availableHeight - this.cellGap * (this.rows - 1)) / this.rows;
+        const size = Math.floor(Math.min(widthSize, heightSize, 48));
+        const clamped = Math.max(24, size);
+        this.boardEl.style.setProperty('--cell-size', `${clamped}px`);
+        this.boardEl.style.gridTemplateColumns = `repeat(${this.cols}, ${clamped}px)`;
+    }
+
+    resize() {
+        this.setCellSize();
+    }
+
     buildBoard() {
-        this.boardEl.style.gridTemplateColumns = `repeat(${this.cols}, 40px)`;
+        this.setCellSize();
         this.boardEl.innerHTML = '';
         this.boardEl.classList.remove('locked');
         this.boardEl.classList.remove('board-shake');
         this.boardEl.oncontextmenu = (e) => e.preventDefault();
+        this.boardEl.onselectstart = () => false;
 
         for (let r = 0; r < this.rows; r++) {
             this.tiles[r] = [];
@@ -43,14 +65,114 @@ class Board {
                     if (e.button === 2) this.toggleFlag(r, c);
                 };
                 el.oncontextmenu = (e) => e.preventDefault();
-                el.onclick = () => this.revealAt(r, c, false, 0);
-
+                el.onselectstart = () => false;
+                el.onclick = () => {
+                    if (el._suppressClick) {
+                        el._suppressClick = false;
+                        return;
+                    }
+                    this.handleCellPrimaryAction(r, c);
+                };
                 this.boardEl.appendChild(el);
                 this.tiles[r][c] = new Tile(r, c, el);
             }
         }
 
         this.emitFlagsChange();
+        this.bindTouchControls();
+    }
+
+    setFlagMode(active) {
+        this.flagMode = active;
+        if (this.boardEl) {
+            this.boardEl.classList.toggle('flag-mode-active', active);
+        }
+    }
+
+    handleCellPrimaryAction(r, c) {
+        if (this.flagMode) {
+            this.toggleFlag(r, c);
+            return;
+        }
+        this.revealAt(r, c, false, 0);
+    }
+
+    clearLongPress(el) {
+        if (!el || !el._longPressTimer) return;
+        clearTimeout(el._longPressTimer);
+        el._longPressTimer = null;
+        el._longPressTriggered = false;
+    }
+
+    startTouchPress(r, c, el) {
+        this.clearLongPress(el);
+        el._longPressTriggered = false;
+        el._longPressTimer = setTimeout(() => {
+            this.toggleFlag(r, c);
+            this.triggerHaptic(40);
+            el._longPressTriggered = true;
+            el._suppressClick = true;
+        }, this.longPressDuration);
+    }
+
+    bindTouchControls() {
+        if (!this.boardEl || !('ontouchstart' in window)) return;
+        const threshold = 10;
+        this.boardEl.addEventListener('touchstart', (event) => {
+            if (this.locked) return;
+            const touch = event.changedTouches[0];
+            if (!touch) return;
+            const target = event.target.closest('.cell');
+            if (!target) return;
+            event.preventDefault();
+            const r = parseInt(target.dataset.r, 10);
+            const c = parseInt(target.dataset.c, 10);
+            this.touchPress = {
+                r,
+                c,
+                el: target,
+                startX: touch.clientX,
+                startY: touch.clientY
+            };
+            this.startTouchPress(r, c, target);
+        }, { passive: false });
+
+        this.boardEl.addEventListener('touchmove', (event) => {
+            if (!this.touchPress) return;
+            const touch = event.changedTouches[0];
+            if (!touch) return;
+            const dx = Math.abs(touch.clientX - this.touchPress.startX);
+            const dy = Math.abs(touch.clientY - this.touchPress.startY);
+            if (dx > threshold || dy > threshold) {
+                this.clearLongPress(this.touchPress.el);
+                this.touchPress = null;
+            }
+        }, { passive: false });
+
+        this.boardEl.addEventListener('touchend', (event) => {
+            if (!this.touchPress) return;
+            const press = this.touchPress;
+            this.touchPress = null;
+            event.preventDefault();
+            const wasLongPress = press.el._longPressTriggered;
+            this.clearLongPress(press.el);
+            if (!wasLongPress) {
+                this.handleCellPrimaryAction(press.r, press.c);
+            }
+            press.el._suppressClick = true;
+        }, { passive: false });
+
+        this.boardEl.addEventListener('touchcancel', () => {
+            if (!this.touchPress) return;
+            this.clearLongPress(this.touchPress.el);
+            this.touchPress = null;
+        });
+    }
+
+
+    triggerHaptic(duration) {
+        if (!this.hapticEnabled || this.locked) return;
+        navigator.vibrate(duration);
     }
 
     emitFlagsChange() {
@@ -111,6 +233,7 @@ class Board {
 
         tile.setFlagged(!tile.flagged);
         this.flagCount += tile.flagged ? 1 : -1;
+        this.triggerHaptic(tile.flagged ? 30 : 15);
         this.emitFlagsChange();
         this.checkWin();
         this.emitBoardChange();
